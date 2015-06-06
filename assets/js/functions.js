@@ -19,6 +19,7 @@ var cache = {
     touchLock: false,
     timer: null
 };
+var tween;
 var util = {
     setTranslateX: function setTranslateX(el, num) {
         el.style[transform] = "translate3d(" + num + "px,0,0)";
@@ -75,10 +76,6 @@ var initPanoramaBox = function initPanoramaBox($el, opts) {
     };
     return run($panoramaItem.get(0), $panoramaItem.get(1), opts.width);
 };
-var animObj = {
-    x: 0
-};
-
 var $el = {};
 $el.main = $('.wrapper');
 
@@ -95,6 +92,10 @@ $el.main.on('touchstart', function (evt) {
         cache.timer = null;
     }
     cache.touchLock = true;
+    if(tween){
+        tween.stop();
+    }
+    cache.nowOffset = cache.len;
 });
 $el.main.on('touchend', function (evt) {
     cache.timer = setTimeout(function () {
@@ -112,7 +113,6 @@ mc.on('panend', function (evt) {
     cache.nowOffset = cache.nowOffset + evt.deltaX;
     cache.panOffsetX = cache.panOffsetX + evt.deltaX;
 });
-var tween;
 var animOffset = function animOffset(length){
     if(tween){
         tween.stop();
