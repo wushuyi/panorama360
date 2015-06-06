@@ -19,7 +19,7 @@ var cache = {
     touchLock: false,
     timer: null
 };
-var tween;
+var tween1, tween2;
 var util = {
     setTranslateX: function setTranslateX(el, num) {
         el.style[transform] = "translate3d(" + num + "px,0,0)";
@@ -84,73 +84,94 @@ var offset = initPanoramaBox($el.main, {
     height: cache.imgH
 });
 
-var mc = new Hammer.Manager($el.main.get(0));
-var pan = new Hammer.Pan();
-$el.main.on('touchstart', function (evt) {
-    if (cache.timer) {
-        clearTimeout(cache.timer);
-        cache.timer = null;
-    }
-    cache.touchLock = true;
-    if(tween){
-        tween.stop();
-    }
-    cache.nowOffset = cache.len;
-});
-$el.main.on('touchend', function (evt) {
-    cache.timer = setTimeout(function () {
-        cache.onceRotationOffsetDeg = cache.deg - cache.runDeg;
-        cache.runDeg = cache.deg + cache.onceRotationOffsetDeg;
-        cache.rotationOffsetDeg = cache.rotationOffsetDeg + cache.onceRotationOffsetDeg;
-        cache.touchLock = false;
-    }, 1000);
-});
-mc.add(pan);
-mc.on('pan', function (evt) {
-    offset(cache.nowOffset + evt.deltaX);
-});
-mc.on('panend', function (evt) {
-    cache.nowOffset = cache.nowOffset + evt.deltaX;
-    cache.panOffsetX = cache.panOffsetX + evt.deltaX;
-});
 var animOffset = function animOffset(length){
-    if(tween){
-        tween.stop();
+    if(tween1){
+        tween1.stop();
     }
-    tween = new TWEEN.Tween({x: cache.len});
-    tween.to({x: length}, 400);
-    tween.onUpdate(function(){
+    tween1 = new TWEEN.Tween({x: cache.len});
+    tween1.to({x: length}, 600);
+    tween1.onUpdate(function(){
         offset(this.x);
     });
-    tween.start();
+    tween1.start();
 };
-tween = new TWEEN.Tween({x: 0});
-tween.to({x: -6000}, 10000);
-tween.onUpdate(function(){
-    offset(this.x);
-});
-tween.start();
-var promise = FULLTILT.getDeviceOrientation({'type': 'world'});
-promise.then(function (orientationControl) {
-    var orientationFunc = function orientationFunc() {
-        var screenAdjustedEvent = orientationControl.getScreenAdjustedEuler();
-        cache.navDeg = 360 - screenAdjustedEvent.alpha;
-        if (cache.navDeg > 270 && cache.navOldDeg < 90) {
-            cache.ring -= 1;
-        } else if (cache.navDeg < 90 && cache.navOldDeg > 270) {
-            cache.ring += 1;
+var animPanEnd = function animPanEnd(velocityX){
+    if(tween2){
+        tween2.stop();
+    }
+    var oldLen = cache.len;
+    var offsetLen ;
+    tween2 = new TWEEN.Tween({x: cache.len});
+    tween2.to({x: cache.len - 200 * velocityX}, 600);
+    tween2.easing(TWEEN.Easing.Cubic.Out);
+    tween2.onUpdate(function(){
+        offset(this.x);
+        offsetLen =oldLen - this.x;
+        cache.nowOffset += + offsetLen;
+        cache.panOffsetX +=  + offsetLen;
+    });
+    tween2.start();
+};
+var initOrientationControl = function () {
+    FULLTILT.getDeviceOrientation({'type': 'world'})
+        .then(function (orientationControl) {
+            var orientationFunc = function orientationFunc() {
+                var screenAdjustedEvent = orientationControl.getScreenAdjustedEuler();
+                cache.navDeg = 360 - screenAdjustedEvent.alpha;
+                if (cache.navDeg > 270 && cache.navOldDeg < 90) {
+                    cache.ring -= 1;
+                } else if (cache.navDeg < 90 && cache.navOldDeg > 270) {
+                    cache.ring += 1;
+                }
+                cache.navOldDeg = cache.navDeg;
+                cache.oldDeg = cache.deg;
+                cache.deg = cache.ring * 360 + cache.navDeg;
+                var offsetDeg = cache.deg - cache.runDeg;
+                if (!cache.touchLock &&
+                    (Math.abs(offsetDeg) > cache.minOffsetDeg)) {
+                    var length = cache.imgW / 360 * -(cache.deg - cache.rotationOffsetDeg) + cache.panOffsetX;
+                    cache.runDeg = cache.deg;
+                    cache.nowOffset = length;
+                    animOffset(length);
+                }
+            };
+            orientationControl.listen(orientationFunc);
+        });
+};
+var initTouch = function(){
+    var mc = new Hammer.Manager($el.main.get(0));
+    var pan = new Hammer.Pan();
+    $el.main.on('touchstart', function (evt) {
+        if (cache.timer) {
+            clearTimeout(cache.timer);
+            cache.timer = null;
         }
-        cache.navOldDeg = cache.navDeg;
-        cache.oldDeg = cache.deg;
-        cache.deg = cache.ring * 360 + cache.navDeg;
-        var offsetDeg = cache.deg - cache.runDeg;
-        if (!cache.touchLock &&
-            (Math.abs(offsetDeg) > cache.minOffsetDeg)) {
-            var length = cache.imgW / 360 * -(cache.deg - cache.rotationOffsetDeg) + cache.panOffsetX;
-            cache.runDeg = cache.deg;
-            cache.nowOffset = length;
-            animOffset(length);
+        cache.touchLock = true;
+        if(tween1){
+            tween1.stop();
         }
-    };
-    orientationControl.listen(orientationFunc);
-});
+        if(tween2){
+            tween2.stop();
+        }
+        cache.nowOffset = cache.len;
+    });
+    $el.main.on('touchend', function (evt) {
+        cache.timer = setTimeout(function () {
+            cache.onceRotationOffsetDeg = cache.deg - cache.runDeg;
+            cache.runDeg = cache.deg + cache.onceRotationOffsetDeg;
+            cache.rotationOffsetDeg = cache.rotationOffsetDeg + cache.onceRotationOffsetDeg;
+            cache.touchLock = false;
+        }, 1000);
+    });
+    mc.add(pan);
+    mc.on('pan', function (evt) {
+        offset(cache.nowOffset + evt.deltaX);
+    });
+    mc.on('panend', function (evt) {
+        cache.nowOffset += + evt.deltaX;
+        cache.panOffsetX +=  + evt.deltaX;
+        //animPanEnd(evt.velocityX);
+    });
+};
+initTouch();
+initOrientationControl();
