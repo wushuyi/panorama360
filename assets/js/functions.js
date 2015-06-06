@@ -1,4 +1,24 @@
+function animate() {
+    requestAnimationFrame(animate);
+    TWEEN.update();
+}
+animate();
 var transform = getStyleProperty('transform');
+var cache = {
+    imgW: 5100,
+    imgH: 852,
+    panOffsetX: 0,
+    ring: 0,
+    deg: 0,
+    runDeg: 0,
+    minOffsetDeg: 8,
+    rotationOffsetDeg: 0,
+    onceRotationOffsetDeg: 0,
+    nowOffset: 0,
+    len: 0,
+    touchLock: false,
+    timer: null
+};
 var util = {
     setTranslateX: function setTranslateX(el, num) {
         el.style[transform] = "translate3d(" + num + "px,0,0)";
@@ -40,6 +60,8 @@ var initPanoramaBox = function initPanoramaBox($el, opts) {
     };
     var run = function (subBox1, subBox2, width) {
         return function offset(num) {
+            num = parseInt(num);
+            cache.len = num;
             var num1 = num % width;
             var num2;
             if (num1 < -width / 2) {
@@ -56,24 +78,9 @@ var initPanoramaBox = function initPanoramaBox($el, opts) {
 var animObj = {
     x: 0
 };
-var cache = {
-    imgW: 5100,
-    imgH: 852,
-    panOffsetX: 0,
-    ring: 0,
-    deg: 0,
-    runDeg: 0,
-    minOffsetDeg: 4,
-    rotationOffsetDeg: 0,
-    onceRotationOffsetDeg: 0,
-    nowOffset: 0,
-    touchLock: false,
-    timer: null
-};
+
 var $el = {};
 $el.main = $('.wrapper');
-
-$el.a1 = $('#a1');
 
 var offset = initPanoramaBox($el.main, {
     width: cache.imgW,
@@ -105,6 +112,24 @@ mc.on('panend', function (evt) {
     cache.nowOffset = cache.nowOffset + evt.deltaX;
     cache.panOffsetX = cache.panOffsetX + evt.deltaX;
 });
+var tween;
+var animOffset = function animOffset(length){
+    if(tween){
+        tween.stop();
+    }
+    tween = new TWEEN.Tween({x: cache.len});
+    tween.to({x: length}, 400);
+    tween.onUpdate(function(){
+        offset(this.x);
+    });
+    tween.start();
+};
+tween = new TWEEN.Tween({x: 0});
+tween.to({x: -6000}, 10000);
+tween.onUpdate(function(){
+    offset(this.x);
+});
+tween.start();
 var promise = FULLTILT.getDeviceOrientation({'type': 'world'});
 promise.then(function (orientationControl) {
     var orientationFunc = function orientationFunc() {
@@ -118,12 +143,13 @@ promise.then(function (orientationControl) {
         cache.navOldDeg = cache.navDeg;
         cache.oldDeg = cache.deg;
         cache.deg = cache.ring * 360 + cache.navDeg;
+        var offsetDeg = cache.deg - cache.runDeg;
         if (!cache.touchLock &&
-            (Math.abs(cache.deg - cache.runDeg) > cache.minOffsetDeg)) {
+            (Math.abs(offsetDeg) > cache.minOffsetDeg)) {
             var length = cache.imgW / 360 * -(cache.deg - cache.rotationOffsetDeg) + cache.panOffsetX;
             cache.runDeg = cache.deg;
             cache.nowOffset = length;
-            offset(length);
+            animOffset(length);
         }
     };
     orientationControl.listen(orientationFunc);
