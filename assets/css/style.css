@@ -44,7 +44,7 @@ textarea:-moz-placeholder { color:#a9a9a9; }
     z-index: 1;
 }
 .panorama-item{
-    background: url("../images/final_bg.png");
+    background: url("../images/panorama.png");
     background-size: auto 100%;
 }
 .petal{
