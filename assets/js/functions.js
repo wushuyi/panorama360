@@ -1,9 +1,29 @@
+log.enableAll();
 function animate() {
     requestAnimationFrame(animate);
     TWEEN.update();
 }
 animate();
 var transform = getStyleProperty('transform');
+var getStyle = ( function() {
+    var getStyleFn = getComputedStyle ?
+        function( elem ) {
+            return getComputedStyle( elem, null );
+        } :
+        function( elem ) {
+            return elem.currentStyle;
+        };
+
+    return function getStyle( elem ) {
+        var style = getStyleFn( elem );
+        if ( !style ) {
+            log.error( 'Style returned ' + style +
+                '. Are you running this code in a hidden iframe on Firefox? ' +
+                'See http://bit.ly/getsizebug1' );
+        }
+        return style;
+    };
+})();
 var cache = {
     imgW: 5100,
     imgH: 852,

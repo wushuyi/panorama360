@@ -66,7 +66,7 @@ function sign(x) {
 
 function SensorCheck(sensorRootObj) {
 
-	var promise = Q.Promise(function(resolve, reject) {
+	var promise = new Promise(function(resolve, reject) {
 
 		var runCheck = function (tries) {
 
@@ -150,7 +150,7 @@ FULLTILT.version = "0.5.2";
 
 FULLTILT.getDeviceOrientation = function(options) {
 
-	var promise = Q.Promise(function(resolve, reject) {
+	var promise = new Promise(function(resolve, reject) {
 
 		var control = new FULLTILT.DeviceOrientation(options);
 
@@ -181,7 +181,7 @@ FULLTILT.getDeviceOrientation = function(options) {
 
 FULLTILT.getDeviceMotion = function(options) {
 
-	var promise = Q.Promise(function(resolve, reject) {
+	var promise = new Promise(function(resolve, reject) {
 
 		var control = new FULLTILT.DeviceMotion(options);
 
