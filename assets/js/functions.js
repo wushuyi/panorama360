@@ -216,6 +216,7 @@ var $el = {};
 $el.win = $(window);
 $el.doc = $(document);
 $el.wrapper = $('.wrapper');
+$el.tmp = $('#tmp');
 
 //$el.a1 = $('#a1');
 $el.a2 = $('#a2');
@@ -232,9 +233,13 @@ var func = $el.wrapper.panorama360({
     swichTime: 800  //滑动结束与重力感应开始间隔时间
 });
 func.stop();
-$el.a2.on('tap', function(){
+
+$el.panoramaItem = $el.wrapper.find('.panorama-item');
+$el.panoramaItem.append($el.tmp.children());
+
+$el.a2.on('tap click', function(){
     func.stop();
 });
-$el.a3.on('tap', function(){
+$el.a3.on('tap click', function(){
     func.start();
 });
