@@ -11,7 +11,9 @@ $.fn.panorama360 = function (options) {
     var $self = $(this);
     var defaults = {
         width: 16,
-        height: 9
+        height: 9,
+        stabilizer: 2,
+        swichTime: 800
     };
     var opts = $.extend(null, defaults, options);
     var transform = getStyleProperty('transform');
@@ -30,7 +32,8 @@ $.fn.panorama360 = function (options) {
         len: 0,
         pathLock: false,
         touchLock: false,
-        timer: null
+        timer: null,
+        swichTime: opts.swichTime
     };
 
     var util = {
@@ -162,7 +165,7 @@ $.fn.panorama360 = function (options) {
                 cache.runDeg = cache.deg + cache.onceRotationOffsetDeg;
                 cache.rotationOffsetDeg = cache.rotationOffsetDeg + cache.onceRotationOffsetDeg;
                 cache.pathLock = false;
-            }, 800);
+            }, cache.swichTime);
         });
         mc.add(pan);
         mc.on('pan', function (evt) {
@@ -188,6 +191,12 @@ $.fn.panorama360 = function (options) {
     initOrientationControl();
     return {
         stop: function(){
+            if(tween1){
+                tween1.stop();
+            }
+            if(tween2){
+                tween2.stop();
+            }
             cache.touchLock = true;
             cache.pathLock = true;
         },
@@ -198,7 +207,7 @@ $.fn.panorama360 = function (options) {
                 cache.runDeg = cache.deg + cache.onceRotationOffsetDeg;
                 cache.rotationOffsetDeg = cache.rotationOffsetDeg + cache.onceRotationOffsetDeg;
                 cache.pathLock = false;
-            }, 800);
+            }, cache.swichTime);
         }
     }
 };
@@ -219,7 +228,8 @@ $el.doc.on('touchstart touchmove touchend touchcancel', function(evt){
 var func = $el.wrapper.panorama360({
     width: 5100,    //全景宽度
     height: 852,    //全景高度
-    stabilizer: 6   //防抖
+    stabilizer: 6,  //防抖
+    swichTime: 800  //滑动结束与重力感应开始间隔时间
 });
 func.stop();
 $el.a2.on('tap', function(){
