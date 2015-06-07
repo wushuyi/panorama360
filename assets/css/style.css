@@ -54,7 +54,10 @@ textarea:-moz-placeholder { color:#a9a9a9; }
     z-index: 9999;
 }
 .info div{
-    font-size: 38px;
+    font-size: 40px;
+    margin-top: 30px;
+    padding: 20px;
+    background: red;
 }
 
 /* Media queries
